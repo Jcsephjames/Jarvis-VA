@@ -1,6 +1,18 @@
+# Virtual Environment
 venv/
+
+# Python
 __pycache__/
 *.pyc
+
+# Environment Variables
 .env
+
+# Audio Recordings
+*.wav
+
+# VS Code
 .vscode/
-.idea/
+
+# macOS
+.DS_Store
