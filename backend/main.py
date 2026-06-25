@@ -19,9 +19,11 @@ def main():
             detector.close_stream()
 
             print("Recording command...")
-            recorder.record(
+            recorder.record_until_silence(
                 filename="command.wav",
-                duration=5,
+                silence_threshold=900,
+                silence_seconds=1.2,
+                max_seconds=20,
             )
 
             print("Command recorded to command.wav")
