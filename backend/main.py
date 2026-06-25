@@ -2,11 +2,13 @@ import time
 
 from backend.audio.recorder import AudioRecorder
 from backend.wakeword.detector import WakeWordDetector
-
+from backend.stt.whisper_transcriber import WhisperTranscriber
 
 def main():
     detector = WakeWordDetector()
     recorder = AudioRecorder()
+
+    transcriber = WhisperTranscriber()
 
     print("JARVIS is online.")
 
@@ -24,9 +26,8 @@ def main():
                 silence_seconds=1.2,
                 max_seconds=20,
             )
-
-            print("Command recorded to command.wav")
-            print("Ready for transcription.")
+            text = transcriber.transcribe("command.wav")
+            print(f"You said: {text}")
 
             print("Resetting listener...")
             detector.reset()
