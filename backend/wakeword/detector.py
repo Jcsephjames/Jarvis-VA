@@ -8,7 +8,7 @@ from openwakeword.model import Model
 class WakeWordDetector:
     def __init__(
         self,
-        threshold=0.95,
+        threshold=0.75,
         cooldown_seconds=8,
         sample_rate=16000,
         chunk_size=1280,

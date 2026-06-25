@@ -21,7 +21,6 @@ def main():
             print("Recording command...")
             recorder.record_until_silence(
                 filename="command.wav",
-                silence_threshold=900,
                 silence_seconds=1.2,
                 max_seconds=20,
             )

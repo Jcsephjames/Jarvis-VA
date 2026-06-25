@@ -1,8 +1,9 @@
 import time
 import wave
 
-import numpy as np
 import pyaudio
+
+from backend.vad.webrtc_vad import WebRTCVAD
 
 
 class AudioRecorder:
@@ -10,24 +11,26 @@ class AudioRecorder:
         self,
         sample_rate=16000,
         channels=1,
-        chunk_size=1024,
+        chunk_size=480,
         sample_format=pyaudio.paInt16,
+        vad=None,
     ):
         self.sample_rate = sample_rate
         self.channels = channels
         self.chunk_size = chunk_size
         self.sample_format = sample_format
+        self.vad = vad or WebRTCVAD(sample_rate=sample_rate)
+
         self.audio = pyaudio.PyAudio()
 
     def record_until_silence(
         self,
         filename="command.wav",
-        silence_threshold=500,
         silence_seconds=1.2,
         max_seconds=20,
-        min_seconds=1,
+        max_wait_for_speech_seconds=8,
     ):
-        print("Recording until you stop talking...")
+        print("Waiting for speech...")
 
         stream = self.audio.open(
             format=self.sample_format,
@@ -39,7 +42,8 @@ class AudioRecorder:
 
         frames = []
         started_at = time.time()
-        last_voice_time = time.time()
+        speech_started = False
+        last_voice_time = None
 
         try:
             while True:
@@ -48,22 +52,30 @@ class AudioRecorder:
                     exception_on_overflow=False,
                 )
 
-                frames.append(data)
-
-                audio_array = np.frombuffer(data, dtype=np.int16)
-                volume = np.sqrt(np.mean(audio_array.astype(np.float32) ** 2))
-
                 now = time.time()
-                recording_duration = now - started_at
-                silence_duration = now - last_voice_time
+                is_speech = self.vad.is_speech(data)
 
-                if volume > silence_threshold:
+                if is_speech:
+                    if not speech_started:
+                        print("Speech detected. Recording...")
+
+                    speech_started = True
                     last_voice_time = now
+                    frames.append(data)
 
-                if (
-                    recording_duration > min_seconds
-                    and silence_duration > silence_seconds
-                ):
+                elif speech_started:
+                    frames.append(data)
+
+                if not speech_started:
+                    if now - started_at > max_wait_for_speech_seconds:
+                        print("No speech detected. Cancelling recording.")
+                        break
+                    continue
+
+                silence_duration = now - last_voice_time
+                recording_duration = now - started_at
+
+                if silence_duration > silence_seconds:
                     print("Silence detected. Stopping recording.")
                     break
 
@@ -75,9 +87,11 @@ class AudioRecorder:
             stream.stop_stream()
             stream.close()
 
-        self._save_wav(filename, frames)
-
-        print(f"Saved recording to {filename}")
+        if frames:
+            self._save_wav(filename, frames)
+            print(f"Saved recording to {filename}")
+        else:
+            print("No audio saved.")
 
     def _save_wav(self, filename, frames):
         with wave.open(filename, "wb") as wav:
