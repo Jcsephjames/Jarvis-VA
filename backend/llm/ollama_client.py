@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import requests
 
 
@@ -6,9 +8,11 @@ class OllamaClient:
         self,
         base_url="http://192.168.0.178:11434",
         model="qwen2.5:3b",
+        system_prompt_path="backend/prompts/jarvis_identity.md",
     ):
         self.base_url = base_url.rstrip("/")
         self.model = model
+        self.system_prompt = Path(system_prompt_path).read_text().strip()
 
     def chat(self, message):
         response = requests.post(
@@ -18,10 +22,7 @@ class OllamaClient:
                 "messages": [
                     {
                         "role": "system",
-                        "content": (
-                            "You are JARVIS, a concise, calm, British AI assistant. "
-                            "Keep replies short and practical."
-                        ),
+                        "content": self.system_prompt,
                     },
                     {
                         "role": "user",
