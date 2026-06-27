@@ -3,12 +3,15 @@ import time
 from backend.audio.recorder import AudioRecorder
 from backend.wakeword.detector import WakeWordDetector
 from backend.stt.whisper_transcriber import WhisperTranscriber
+from backend.llm.ollama_client import OllamaClient
 
 def main():
     detector = WakeWordDetector()
     recorder = AudioRecorder()
 
     transcriber = WhisperTranscriber()
+
+    llm = OllamaClient()
 
     print("JARVIS is online.")
 
@@ -28,6 +31,10 @@ def main():
             )
             text = transcriber.transcribe("command.wav")
             print(f"You said: {text}")
+
+            print("Thinking...")
+            reply = llm.chat(text)
+            print(f"JARVIS: {reply}")
 
             print("Resetting listener...")
             detector.reset()
