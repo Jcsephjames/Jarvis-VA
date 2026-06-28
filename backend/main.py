@@ -8,7 +8,7 @@ from backend.wakeword.detector import WakeWordDetector
 
 
 def play_audio(filename):
-    subprocess.run(["aplay", str(filename)], check=True)
+    subprocess.run(["/usr/bin/aplay", "-D", "default", str(filename)], check=False)
 
 
 def main():
