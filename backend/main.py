@@ -24,6 +24,7 @@ def main():
 
     try:
         while True:
+            state.clear_interaction()
             state.set_state(JarvisState.LISTENING)
             wakeword, score = detector.wait_for_wake_word()
 
@@ -40,6 +41,7 @@ def main():
             state.set_state(JarvisState.TRANSCRIBING)
             text = transcriber.transcribe("command.wav")
             print(f"You said: {text}")
+            state.set_transcript(text)
 
             if not text:
                 print("No speech detected. Resetting listener...")
@@ -50,6 +52,7 @@ def main():
             state.set_state(JarvisState.THINKING)
             reply = brain.chat(text)
             print(f"JARVIS: {reply}")
+            state.set_response(reply)
 
             state.set_state(JarvisState.SPEAKING)
             audio_file = brain.speak(reply)
@@ -64,7 +67,7 @@ def main():
         state.set_state(JarvisState.SLEEPING)
 
     except Exception as error:
-        state.set_state(JarvisState.ERROR)
+        state.set_error(str(error))
         print(f"JARVIS error: {error}")
         raise
 
